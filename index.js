@@ -27,12 +27,17 @@ async function run() {
     const db = client.db('drivehub')
     const carCollection = db.collection('cars')
 
+    app.get('/explore-cars', async (req, res) => {
+      const result = await carCollection.find().toArray()
+      res.json(result);
+    })
+
     app.post('/car', async (req, res) => {
       const carData = req.body
       console.log(carData);
       const result = await carCollection.insertOne(carData)
 
-      res.json(result)
+      res.json(result);
     })
 
 
