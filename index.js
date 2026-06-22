@@ -30,7 +30,7 @@ async function run() {
     app.get('/explore-cars', async (req, res) => {
       const result = await carCollection.find().toArray()
       res.json(result);
-    })
+    });
 
     app.post('/car', async (req, res) => {
       const carData = req.body
@@ -38,7 +38,7 @@ async function run() {
       const result = await carCollection.insertOne(carData)
 
       res.json(result);
-    })
+    });
 
     app.get('/explore-cars/:id', async (req, res) => {
       const {id} = req.params
@@ -46,7 +46,22 @@ async function run() {
       const result = await carCollection.findOne({_id: new ObjectId(id)})
 
       res.json(result);
-    })
+    });
+
+    app.patch('/explore-cars/:id', async (req, res) => {
+      const {id} = req.params
+      const updatedData = req.body
+
+      console.log(id);
+      console.log(updatedData);
+
+      const result = await carCollection.updateOne(
+        {_id: new ObjectId(id)},
+        {$set: updatedData}
+      )
+
+      res.json(result)
+    });
 
 
 
