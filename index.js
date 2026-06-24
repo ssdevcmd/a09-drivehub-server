@@ -24,8 +24,9 @@ async function run() {
   try {
     await client.connect();
 
-    const db = client.db('drivehub')
-    const carCollection = db.collection('cars')
+    const db = client.db('drivehub');
+    const carCollection = db.collection('cars');
+    const bookingCollection = db.collection('bookings');
 
     app.get('/explore-cars', async (req, res) => {
       const result = await carCollection.find().toArray()
@@ -66,6 +67,13 @@ async function run() {
     app.delete('/explore-cars/:id', async (req, res) => {
       const {id} = req.params
       const result = await carCollection.deleteOne({_id: new ObjectId(id)})
+
+      res.json(result)
+    });
+
+    app.post('/booking', async (req, res) => {
+      const bookingData = req.body;
+      const result = await bookingCollection.insertOne(bookingData)
 
       res.json(result)
     })
