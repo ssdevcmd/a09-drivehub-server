@@ -91,6 +91,13 @@ async function run() {
       const result = await bookingCollection.deleteOne({_id: new ObjectId(bookingId)})
 
       res.json(result)
+    });
+
+    app.get('/my-added-cars/:userId', async (req, res) => {
+      const {userId} = req.params;
+      const result = await await carCollection.find({userId}).toArray()
+
+      res.json(result)
     })
 
 
