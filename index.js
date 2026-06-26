@@ -13,11 +13,11 @@ app.use(cors())
 app.use(express.json())
 
 const client = new MongoClient(uri, {
-    serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-    }
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
 });
 
 async function run() {
@@ -28,10 +28,10 @@ async function run() {
     const carCollection = db.collection('cars');
     const bookingCollection = db.collection('bookings');
 
-    app.get('/explore-cars', async (req, res) => {
-      const result = await carCollection.find().toArray()
-      res.json(result);
-    });
+    // app.get('/explore-cars', async (req, res) => {
+    //   const result = await carCollection.find().toArray()
+    //   res.json(result);
+    // });
 
     app.post('/car', async (req, res) => {
       const carData = req.body
@@ -41,40 +41,83 @@ async function run() {
       res.json(result);
     });
 
-    app.get('/explore-cars/:id', async (req, res) => {
-      const {id} = req.params
 
-      const result = await carCollection.findOne({_id: new ObjectId(id)})
+    app.get('/explore-cars', async (req, res) => {
+      const { search="", type="All" } = req.query;
+
+      const query = {};
+
+      if (search) {
+        query.carModel = {
+          $regex: search,
+          $options: "i",
+        };
+      }
+
+      if (type && type !== "All") {
+        query.carType = type;
+      }
+
+      console.log(query);
+
+      const result = await carCollection.find(query).toArray();
 
       res.json(result);
     });
 
+    app.get('/explore-cars/:id', async (req, res) => {
+      const { id } = req.params
+
+      const result = await carCollection.findOne({ _id: new ObjectId(id) })
+
+      res.json(result);
+    });
+
+    //     app.get("/explore-cars", async (req, res) => {
+    //   const { search } = req.query;
+
+    //   const query = {};
+
+    //   // Search by car model
+    //   if (search) {
+    //     query.carModel = {
+    //       $in: [search],
+    //     };
+    //   }
+
+
+    //   const result = await carCollection.find(query).toArray();
+
+    //   res.json(result);
+    // });
+
+
     app.patch('/explore-cars/:id', async (req, res) => {
-      const {id} = req.params
+      const { id } = req.params
       const updatedData = req.body
 
       console.log(id);
       console.log(updatedData);
 
       const result = await carCollection.updateOne(
-        {_id: new ObjectId(id)},
-        {$set: updatedData}
+        { _id: new ObjectId(id) },
+        { $set: updatedData }
       )
 
       res.json(result)
     });
 
     app.delete('/explore-cars/:id', async (req, res) => {
-      const {id} = req.params
-      const result = await carCollection.deleteOne({_id: new ObjectId(id)})
+      const { id } = req.params
+      const result = await carCollection.deleteOne({ _id: new ObjectId(id) })
 
       res.json(result)
     });
 
     app.get('/booking/:userId', async (req, res) => {
-      const {userId} = req.params
+      const { userId } = req.params
 
-      const result = await bookingCollection.find({userId}).toArray()
+      const result = await bookingCollection.find({ userId }).toArray()
 
       res.json(result)
     })
@@ -83,19 +126,28 @@ async function run() {
       const bookingData = req.body;
       const result = await bookingCollection.insertOne(bookingData)
 
+      await carCollection.updateOne(
+        { _id: new ObjectId(bookingData.carId) },
+        {
+          $inc: {
+            booking_count: 1
+          }
+        }
+      )
+
       res.json(result)
     });
 
     app.delete('/booking/:bookingId', async (req, res) => {
-      const {bookingId} = req.params;
-      const result = await bookingCollection.deleteOne({_id: new ObjectId(bookingId)})
+      const { bookingId } = req.params;
+      const result = await bookingCollection.deleteOne({ _id: new ObjectId(bookingId) })
 
       res.json(result)
     });
 
     app.get('/my-added-cars/:userId', async (req, res) => {
-      const {userId} = req.params;
-      const result = await await carCollection.find({userId}).toArray()
+      const { userId } = req.params;
+      const result = await await carCollection.find({ userId }).toArray()
 
       res.json(result)
     })
@@ -112,9 +164,9 @@ async function run() {
 run().catch(console.dir);
 
 app.get('/', (req, res) => {
-    res.send('Server is running fine')
+  res.send('Server is running fine')
 })
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 })
