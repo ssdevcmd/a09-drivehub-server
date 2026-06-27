@@ -2,6 +2,7 @@ const express = require('express')
 const dotenv = require('dotenv')
 const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
 dotenv.config()
 
 const uri = process.env.MONGODB_URI;
@@ -20,6 +21,30 @@ const client = new MongoClient(uri, {
   }
 });
 
+const JWKS = createRemoteJWKSet(
+  new URL('http://localhost:3000/api/auth/jwks')
+)
+
+const verifyToken = async (req, res, next) => {
+  const authHeader = req?.headers.authorization
+  if (!authHeader) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+  const token = authHeader.split(' ')[1]
+  if (!token) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+  // console.log(token);
+
+  try {
+    const { payload } = await jwtVerify(token, JWKS)
+    console.log(payload);
+    next()
+  } catch (error) {
+    return res.status(403).json({ message: 'Forbidden'});
+  }
+}
+
 async function run() {
   try {
     await client.connect();
@@ -33,7 +58,7 @@ async function run() {
     //   res.json(result);
     // });
 
-    app.post('/car', async (req, res) => {
+    app.post('/car', verifyToken, async (req, res) => {
       const carData = req.body
       console.log(carData);
       const result = await carCollection.insertOne(carData)
@@ -43,7 +68,7 @@ async function run() {
 
 
     app.get('/explore-cars', async (req, res) => {
-      const { search="", type="All" } = req.query;
+      const { search = "", type = "All" } = req.query;
 
       const query = {};
 
@@ -65,7 +90,8 @@ async function run() {
       res.json(result);
     });
 
-    app.get('/explore-cars/:id', async (req, res) => {
+    //middleware
+    app.get('/explore-cars/:id', verifyToken, async (req, res) => {
       const { id } = req.params
 
       const result = await carCollection.findOne({ _id: new ObjectId(id) })
@@ -73,26 +99,8 @@ async function run() {
       res.json(result);
     });
 
-    //     app.get("/explore-cars", async (req, res) => {
-    //   const { search } = req.query;
 
-    //   const query = {};
-
-    //   // Search by car model
-    //   if (search) {
-    //     query.carModel = {
-    //       $in: [search],
-    //     };
-    //   }
-
-
-    //   const result = await carCollection.find(query).toArray();
-
-    //   res.json(result);
-    // });
-
-
-    app.patch('/explore-cars/:id', async (req, res) => {
+    app.patch('/explore-cars/:id', verifyToken, async (req, res) => {
       const { id } = req.params
       const updatedData = req.body
 
@@ -107,14 +115,14 @@ async function run() {
       res.json(result)
     });
 
-    app.delete('/explore-cars/:id', async (req, res) => {
+    app.delete('/explore-cars/:id', verifyToken, async (req, res) => {
       const { id } = req.params
       const result = await carCollection.deleteOne({ _id: new ObjectId(id) })
 
       res.json(result)
     });
 
-    app.get('/booking/:userId', async (req, res) => {
+    app.get('/booking/:userId', verifyToken, async (req, res) => {
       const { userId } = req.params
 
       const result = await bookingCollection.find({ userId }).toArray()
@@ -122,7 +130,7 @@ async function run() {
       res.json(result)
     })
 
-    app.post('/booking', async (req, res) => {
+    app.post('/booking', verifyToken, async (req, res) => {
       const bookingData = req.body;
       const result = await bookingCollection.insertOne(bookingData)
 
@@ -138,14 +146,14 @@ async function run() {
       res.json(result)
     });
 
-    app.delete('/booking/:bookingId', async (req, res) => {
+    app.delete('/booking/:bookingId', verifyToken, async (req, res) => {
       const { bookingId } = req.params;
       const result = await bookingCollection.deleteOne({ _id: new ObjectId(bookingId) })
 
       res.json(result)
     });
 
-    app.get('/my-added-cars/:userId', async (req, res) => {
+    app.get('/my-added-cars/:userId', verifyToken, async (req, res) => {
       const { userId } = req.params;
       const result = await await carCollection.find({ userId }).toArray()
 
