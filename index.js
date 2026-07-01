@@ -40,7 +40,7 @@ const verifyToken = async (req, res, next) => {
     console.log(payload);
     next()
   } catch (error) {
-    return res.status(403).json({ message: 'Forbidden'});
+    return res.status(403).json({ message: 'Forbidden' });
   }
 }
 
@@ -52,10 +52,15 @@ async function run() {
     const carCollection = db.collection('cars');
     const bookingCollection = db.collection('bookings');
 
-    // app.get('/explore-cars', async (req, res) => {
-    //   const result = await carCollection.find().toArray()
-    //   res.json(result);
-    // });
+    app.get('/cars', async (req, res) => {
+      const query = {
+
+        availability: 'Available'
+      }
+      const cursor = carCollection.find(query).limit(6);
+      const result = await cursor.toArray()
+      res.json(result);
+    });
 
     app.post('/car', verifyToken, async (req, res) => {
       const carData = req.body
