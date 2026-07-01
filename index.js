@@ -64,7 +64,6 @@ async function run() {
 
     app.post('/car', verifyToken, async (req, res) => {
       const carData = req.body
-      console.log(carData);
       const result = await carCollection.insertOne(carData)
 
       res.json(result);
@@ -87,7 +86,7 @@ async function run() {
         query.carType = type;
       }
 
-      console.log(query);
+      // console.log(query);
 
       const result = await carCollection.find(query).toArray();
 
@@ -108,8 +107,8 @@ async function run() {
       const { id } = req.params
       const updatedData = req.body
 
-      console.log(id);
-      console.log(updatedData);
+      // console.log(id);
+      // console.log(updatedData);
 
       const result = await carCollection.updateOne(
         { _id: new ObjectId(id) },
@@ -132,7 +131,7 @@ async function run() {
       const result = await bookingCollection.find({ userId }).toArray()
 
       res.json(result)
-    })
+    });
 
     app.post('/booking', verifyToken, async (req, res) => {
       const bookingData = req.body;
@@ -162,7 +161,7 @@ async function run() {
       const result = await await carCollection.find({ userId }).toArray()
 
       res.json(result)
-    })
+    });
 
 
 
